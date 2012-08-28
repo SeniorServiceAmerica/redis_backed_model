@@ -4,47 +4,59 @@ module RedisBackedModel
   require 'date'
     
   
-    def initialize(model, model_id, score)
+    def initialize(model, model_id, definition)
       @model      = model
       @model_id   = model_id
-      @score      = score
+      @definition = definition
     end
   
     def to_redis
-      "zadd #{sorted_set_key} #{sorted_set_score} #{member}"
+      "zadd #{key} #{score} #{member}"
     end
   
     private
       
-      attr_accessor :model, :model_id, :by_attribute, :score_label, :score
-                  
+      attr_accessor :model, :model_id #, :by_attribute, :score_label, :score
+      
+      def definition_keys
+        @definition.keys.first
+      end
+      
+      def definition_values
+        @definition.values.first
+      end
+      
       def key_by
-        @score.keys.first.match(/score_\[\S+\|(\S+)\]/)[1]        
+        parse_definition(definition_keys)[1]
       end
       
       def key_for
-        @score.keys.first.match(/score_\[(\S+)\|/)[1]
+        parse_definition(definition_keys)[0]        
       end
 
       def key_model_name
         @model.to_s.underscore.pluralize
       end
 
-      def key_value
-        @score.values.first.match(/\[(\S+)\|/)[1]
+      def key_for_value
+        parse_definition(definition_values)[0]
       end
 
       def member
         @model_id
       end
         
-      def sorted_set_key
-        "#{key_model_name}_for_#{key_for}_by_#{key_by}:#{key_value}"
+      def key
+        "#{key_model_name}_for_#{key_for}_by_#{key_by}:#{key_for_value}"
       end
 
-      def sorted_set_score
-        score = @score.values.first.match(/\[\S+\|(\S+)\]/)[1]
+      def score
+        score = parse_definition(definition_values)[1]
         key_by == 'date' ? Date.parse(score).to_time.to_f : score
+      end
+      
+      def parse_definition(string)
+        string.match(/.*\[(\S+)\]/)[1].split('|')
       end
   
   end
