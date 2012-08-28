@@ -28,7 +28,7 @@ module RedisBackedModel
     
     private
     
-      attr_reader :scores
+      attr_reader :id, :scores
     
       def add_to_instance_variables(key, value)
         if key.match(/score_\[\w+\|\w+\]/)
@@ -43,12 +43,12 @@ module RedisBackedModel
         @scores << SortedSet.new(self.class, id, Hash[key,value])
       end
       
-      def id
-        @id
-      end
+      # def id
+      #   @id
+      # end
 
-      def instance_variables_to_redis(instance_variable)
-        "hset #{model_name_for_redis}:#{id} #{variable.to_s[1..-1]} #{instance_variable_get(variable.to_s)}" unless instance_variable.to_s == '@id'
+      def instance_variable_to_redis(instance_variable)
+        "hset #{model_name_for_redis}:#{id} #{instance_variable.to_s[1..-1]} #{instance_variable_get(instance_variable.to_s)}" unless instance_variable.to_s == '@id'
       end
         
       def model_name_for_redis

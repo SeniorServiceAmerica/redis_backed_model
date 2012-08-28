@@ -58,7 +58,7 @@ describe RedisBackedModel do
 
   it "stores score_ attributes in scores as SortedSet objects" do
     ['score_[foo|bar]', 'score_[baz|qux]', 'score_[wibble|wobble]'].each_with_index do |score,index|
-      @attributes[score]  = "#{index}|#{index + 1}"
+      @attributes[score]  = "[#{index}|#{index + 1}]"
     end
     rbm = RedisBackedModel::RedisBackedModel.new(@attributes)
     rbm.send(:scores).each do |score|
@@ -78,12 +78,70 @@ describe RedisBackedModel do
     rbm.send(:redis_set_command).should eq('sadd redis_backed_model_ids 1')    
   end
   
-  it "returns an array of hash set commands for each instance variable" do 
-    attributes = {'id' => 100, 'foo' => 'bar', 'wibble' => 'wobble'}
-    rbm = RedisBackedModel::RedisBackedModel.new(attributes)
-    rbm.send(:redis_hash_commands).count.should eq(2)
-    rbm.send(:redis_hash_commands).include?('hset redis_backed_model:100 foo bar').should eq(true)
-    rbm.send(:redis_hash_commands).include?('hset redis_backed_model:100 wibble wobble').should eq(true)
+  it "creates a hset command for instance variables that are not id" do 
+    rbm = RedisBackedModel::RedisBackedModel.new()
+    rbm.instance_variable_set('@id', 1)    
+    rbm.instance_variable_set('@foo', 20)
+    rbm.send(:instance_variable_to_redis, '@foo').should eq('hset redis_backed_model:1 foo 20')
+  end
+
+  it "puts a underscored version of the model name as the first part of the hset key name in instance_variable_set" do 
+    rbm = RedisBackedModel::RedisBackedModel.new()
+    rbm.instance_variable_set('@id', 1)    
+    rbm.instance_variable_set('@foo', 20)
+    hset_command = rbm.send(:instance_variable_to_redis, '@foo')
+    hset_command.split(' ')[1].split(':')[0].should eq(RedisBackedModel.to_s.underscore)
+  end
+
+  it "puts the id as the second part of the hset hset key name in instance_variable_set" do 
+    rbm = RedisBackedModel::RedisBackedModel.new()
+    rbm.instance_variable_set('@id', 1)    
+    rbm.instance_variable_set('@foo', 20)
+    hset_command = rbm.send(:instance_variable_to_redis, '@foo')
+    hset_command.split(' ')[1].split(':')[1].should eq(rbm.instance_variable_get('@id').to_s)  
   end
   
+  it "puts the instance_variable_name (without @) as the hset field name in instance_variable_set" do
+    rbm = RedisBackedModel::RedisBackedModel.new()
+    rbm.instance_variable_set('@id', 1)    
+    rbm.instance_variable_set('@foo', 20)
+    hset_command = rbm.send(:instance_variable_to_redis, '@foo')
+    hset_command.split(' ')[2].should eq('foo') 
+  end
+  
+  it "put the instance variable value as the hset value in instance_variable_set" do 
+    rbm = RedisBackedModel::RedisBackedModel.new()
+    rbm.instance_variable_set('@id', 1)    
+    rbm.instance_variable_set('@foo', 20)
+    hset_command = rbm.send(:instance_variable_to_redis, '@foo')
+    hset_command.split(' ')[3].should eq('20') 
+  end
+  
+  it "does not create an hset command for the id instance variable" do
+    rbm = RedisBackedModel::RedisBackedModel.new()
+    rbm.instance_variable_set('@id', 1)    
+    rbm.send(:instance_variable_to_redis, '@id').should eq(nil)
+  end
+
+  it "includes as sadd command in to_redis" do
+    @attributes['score_[foo|bar]']  = '[1|2012-03-04]'
+    rbm = RedisBackedModel::RedisBackedModel.new(@attributes)
+    rbm.to_redis.select { |command| command.match(/sadd/)}.count.should eq(1)
+  end
+  
+  it "includes a hset command for each instance variable except id in to_redis" do
+    @attributes['score_[foo|bar]']  = '[1|2012-03-04]'
+    rbm = RedisBackedModel::RedisBackedModel.new(@attributes)
+    expected = rbm.instance_variables.count - 1
+    rbm.to_redis.select {|command| command.match(/hset/)}.count.should eq(expected)
+  end
+  
+  it "includes a sorted_set.to_redis command for each score attribute in to_redis" do 
+    scores = ['score_[foo|bar]', 'score_[baz|qux]', 'score_[wibble|wobble]']
+    scores.each_with_index do |score,index|
+      @attributes[score]  = "[#{index}|#{index + 1}]"
+    end
+    rbm = RedisBackedModel::RedisBackedModel.new(@attributes)
+    rbm.to_redis.select { |command| command.match(/zadd/) }.count.should eq(scores.count)
+  end
 end
