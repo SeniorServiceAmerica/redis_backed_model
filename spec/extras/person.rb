@@ -16,7 +16,7 @@ class Person < RedisBackedModel::RedisBackedModel
   
   def self.find(id)
     attr = $redis.hgetall("person:#{id}")
-    self.new(attr.merge({'id' => id}))
+    self.new(attr.merge({:id => id}))
   end
 
   #def self.last
@@ -33,9 +33,9 @@ class Person < RedisBackedModel::RedisBackedModel
   end
 
   # def initialize(attr)
-    # @id = attr[:id]
-    # @first_name = attr["first_name"]
-    # @last_name = attr["last_name"]
+  #   @id = attr[:id]
+  #   @first_name = attr["first_name"]
+  #   @last_name = attr["last_name"]
   # end
 
   def name

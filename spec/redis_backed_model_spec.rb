@@ -156,14 +156,14 @@ describe Person do
     $redis.hset 'person:0', 'last_name', 'doe'
   end
 
-  it "should set its from redis" do
+  it "should set its instance_variables from redis, using RedisBackedModel initialize" do
     person = Person.find(0)
     person.instance_variables.include?(:@first_name).should eq(true)
     person.instance_variables.include?(:@last_name).should eq(true)
     person.instance_variables.include?(:@id).should eq(true)    
   end
     
-  it "has same methods as normal person" do
+  it "should have same name method" do
     person = Person.find(0)
     person.name.should eq('jane doe')    
   end
