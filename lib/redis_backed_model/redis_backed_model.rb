@@ -17,9 +17,6 @@ module RedisBackedModel
       instance_variables.each do | var |
         redis_commands << instance_variable_to_redis(var) if instance_variable_to_redis(var)
       end
-      # redis_hash_commands.each do |hash_command|
-      #   redis_commands << hash_command
-      # end
       scores.each do |score|
         redis_commands << score.to_redis
       end
@@ -43,10 +40,6 @@ module RedisBackedModel
         @scores << SortedSet.new(self.class, id, Hash[key,value])
       end
       
-      # def id
-      #   @id
-      # end
-
       def instance_variable_to_redis(instance_variable)
         "hset #{model_name_for_redis}:#{id} #{instance_variable.to_s[1..-1]} #{instance_variable_get(instance_variable.to_s)}" unless instance_variable.to_s == '@id'
       end
@@ -59,13 +52,6 @@ module RedisBackedModel
         "sadd #{model_name_for_redis}_ids #{id}"
       end
       
-      # def redis_hash_commands
-      #   hash_commands = []
-      #   instance_variables.reject {|var| var.to_s == '@id'}.each do |variable|
-      #     hash_commands << "hset #{model_name_for_redis}:#{id} #{variable.to_s[1..-1]} #{instance_variable_get(variable.to_s)}"
-      #   end
-      #   hash_commands
-      # end
   end
     
 end

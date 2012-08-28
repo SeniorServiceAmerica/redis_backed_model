@@ -1,5 +1,4 @@
 require "spec_helper"
-# require_relative '../test/lib/person.rb'
 
 describe RedisBackedModel do
   before(:all) do
