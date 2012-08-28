@@ -15,5 +15,6 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = RedisBackedModel::VERSION
   gem.add_development_dependency 'rspec'
+  gem.add_development_dependency 'redis'
   gem.add_dependency('active_support')  
 end

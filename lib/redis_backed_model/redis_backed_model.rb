@@ -41,7 +41,7 @@ module RedisBackedModel
       end
       
       def instance_variable_to_redis(instance_variable)
-        "hset #{model_name_for_redis}:#{id} #{instance_variable.to_s[1..-1]} #{instance_variable_get(instance_variable.to_s)}" unless instance_variable.to_s == '@id'
+        "hset #{model_name_for_redis}:#{id} #{instance_variable.to_s.deinstance_variableize} #{instance_variable_get(instance_variable.to_s)}" unless instance_variable.to_s == '@id'
       end
         
       def model_name_for_redis

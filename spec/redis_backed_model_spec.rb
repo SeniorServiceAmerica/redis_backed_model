@@ -1,4 +1,5 @@
 require "spec_helper"
+require 'extras/person'
 
 describe RedisBackedModel do
   before(:all) do
@@ -32,7 +33,8 @@ describe RedisBackedModel do
     rbm = RedisBackedModel::RedisBackedModel.new(@attributes)
     rbm.instance_variables.count.should eq(@size)
     @attributes.each do | key, value|
-      rbm.instance_variables.include?("@#{key}".to_sym).should eq(true), "no instance variable for #{key}"
+      # rbm.instance_variables.include?("@#{key}".to_sym).should eq(true), "no instance variable for #{key}"
+      rbm.instance_variables.include?(key.instance_variableize).should eq(true), "no instance variable for #{key}"      
     end
   end
   
@@ -45,14 +47,14 @@ describe RedisBackedModel do
     score_key = 'score_[foo|bar]'
     @attributes[score_key]  = '[1|2]'
     rbm = RedisBackedModel::RedisBackedModel.new(@attributes)
-    rbm.instance_variables.include?("@#{score_key}".to_sym).should eq(false)
+    rbm.instance_variables.include?(score_key.instance_variableize).should eq(false)
   end
   
   it "creates a scores instance variable if there are any score_[x|y] attributes" do
     score_key = 'score_[foo|bar]'
     @attributes[score_key]  = '[1|2]'
     rbm = RedisBackedModel::RedisBackedModel.new(@attributes)
-    rbm.instance_variables.include?("@scores".to_sym).should eq(true)    
+    rbm.instance_variables.include?('scores'.instance_variableize).should eq(true)    
   end
 
   it "stores score_ attributes in scores as SortedSet objects" do
@@ -143,4 +145,27 @@ describe RedisBackedModel do
     rbm = RedisBackedModel::RedisBackedModel.new(@attributes)
     rbm.to_redis.select { |command| command.match(/zadd/) }.count.should eq(scores.count)
   end
+
+end
+
+# test inheriting from RedisBackedModel
+describe Person do 
+  
+  before(:all) do 
+    $redis.hset 'person:0', 'first_name', 'jane'
+    $redis.hset 'person:0', 'last_name', 'doe'
+  end
+
+  it "should set its from redis" do
+    person = Person.find(0)
+    person.instance_variables.include?(:@first_name).should eq(true)
+    person.instance_variables.include?(:@last_name).should eq(true)
+    person.instance_variables.include?(:@id).should eq(true)    
+  end
+    
+  it "has same methods as normal person" do
+    person = Person.find(0)
+    person.name.should eq('jane doe')    
+  end
+  
 end
