@@ -16,5 +16,5 @@ Gem::Specification.new do |gem|
   gem.version       = RedisBackedModel::VERSION
   gem.add_development_dependency 'rspec'
   gem.add_development_dependency 'redis'
-  gem.add_dependency('active_support')  
+  gem.add_dependency('activesupport')
 end
