@@ -13,12 +13,9 @@ module RedisBackedModel
     
     def to_redis
       redis_commands = []
-      redis_commands << redis_set_command
+      redis_commands << id_set_command
       instance_variables.each do | var |
-        redis_commands << instance_variable_to_redis(var) if instance_variable_to_redis(var)
-      end
-      scores.each do |score|
-        redis_commands << score.to_redis
+        build_command_for_variable(var, redis_commands)
       end
       redis_commands
     end
@@ -40,18 +37,29 @@ module RedisBackedModel
         @scores << SortedSet.new(self.class, id, Hash[key,value])
       end
       
+      def build_command_for_variable(variable, collection)
+        value = instance_variable_get(variable)
+        if value.respond_to?(:each)
+          value.each do |redis_object|
+            collection << redis_object.to_redis
+          end
+        else
+          collection << instance_variable_to_redis(variable)
+        end
+      end
+
+      def id_set_command
+        "sadd #{model_name_for_redis}_ids #{id}"
+      end
+      
       def instance_variable_to_redis(instance_variable)
-        "hset #{model_name_for_redis}:#{id} #{instance_variable.to_s.deinstance_variableize} #{instance_variable_get(instance_variable.to_s)}" unless instance_variable.to_s == '@id'
+        "hset #{model_name_for_redis}:#{id} #{instance_variable.to_s.deinstance_variableize} #{instance_variable_get(instance_variable.to_s)}"
       end
         
       def model_name_for_redis
         class_as_string = self.class.to_s.demodulize.underscore        
       end
-        
-      def redis_set_command
-        "sadd #{model_name_for_redis}_ids #{id}"
-      end
-      
+              
   end
     
 end
