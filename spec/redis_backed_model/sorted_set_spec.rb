@@ -44,8 +44,8 @@ describe RedisBackedModel::SortedSet do
     @scored_set.send(:member).should eq(@scored_set.send(:model_id))
   end
 
-  it "returns 'zadd key value model_id' as to_redis" do 
-    @scored_set.to_redis.should eq('zadd false_classes_for_foo_by_bar:wibble wobble 1')
+  it "returns 'zadd|key|value|model_id' as to_redis" do 
+    @scored_set.to_redis.should eq('zadd|false_classes_for_foo_by_bar:wibble|wobble|1')
   end
   
 end

@@ -49,11 +49,11 @@ module RedisBackedModel
       end
 
       def id_set_command
-        "sadd #{model_name_for_redis}_ids #{id}"
+        "sadd|#{model_name_for_redis}_ids|#{id}"
       end
       
       def instance_variable_to_redis(instance_variable)
-        "hset #{model_name_for_redis}:#{id} #{instance_variable.to_s.deinstance_variableize} #{instance_variable_get(instance_variable.to_s)}"
+        "hset|#{model_name_for_redis}:#{id}|#{instance_variable.to_s.deinstance_variableize}|#{instance_variable_get(instance_variable.to_s)}"
       end
         
       def model_name_for_redis

@@ -11,7 +11,7 @@ module RedisBackedModel
     end
   
     def to_redis
-      "zadd #{key} #{score} #{member}"
+      "zadd|#{key}|#{score}|#{member}"
     end
   
     private

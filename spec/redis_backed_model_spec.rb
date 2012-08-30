@@ -78,7 +78,7 @@ describe RedisBackedModel do
     
   it "returns a redis command to add the model id to a set named (model_name)_ids" do 
     rbm = RedisBackedModel::RedisBackedModel.new(@attributes_with_id)
-    rbm.send(:id_set_command).should eq('sadd redis_backed_model_ids 1')    
+    rbm.send(:id_set_command).should eq('sadd|redis_backed_model_ids|1')    
   end
   
   context "creating an hset command for an instance variable" do
@@ -88,27 +88,33 @@ describe RedisBackedModel do
       @rbm.instance_variable_set('@foo', 20)      
     end
     it "creates a hset command for instance variables" do 
-      @rbm.send(:instance_variable_to_redis, '@foo').should eq('hset redis_backed_model:1 foo 20')
+      @rbm.send(:instance_variable_to_redis, '@foo').should eq('hset|redis_backed_model:1|foo|20')
     end
 
     it "puts a underscored version of the model name as the first part of the hset key name in instance_variable_set" do 
       hset_command = @rbm.send(:instance_variable_to_redis, '@foo')
-      hset_command.split(' ')[1].split(':')[0].should eq(RedisBackedModel.to_s.underscore)
+      hset_command.split('|')[1].split(':')[0].should eq(RedisBackedModel.to_s.underscore)
     end
 
     it "puts the id as the second part of the hset hset key name in instance_variable_set" do 
       hset_command = @rbm.send(:instance_variable_to_redis, '@foo')
-      hset_command.split(' ')[1].split(':')[1].should eq(@rbm.instance_variable_get('@id').to_s)  
+      hset_command.split('|')[1].split(':')[1].should eq(@rbm.instance_variable_get('@id').to_s)  
     end
   
     it "puts the instance_variable_name (without @) as the hset field name in instance_variable_set" do
       hset_command = @rbm.send(:instance_variable_to_redis, '@foo')
-      hset_command.split(' ')[2].should eq('foo') 
+      hset_command.split('|')[2].should eq('foo') 
     end
   
     it "put the instance variable value as the hset value in instance_variable_set" do 
       hset_command = @rbm.send(:instance_variable_to_redis, '@foo')
-      hset_command.split(' ')[3].should eq('20') 
+      hset_command.split('|')[3].should eq('20') 
+    end
+    
+    it "only ever has 4 arguments" do
+      @rbm.instance_variable_set('@bar', 'string with spaces')
+      hset_command = @rbm.send(:instance_variable_to_redis, '@bar')
+      hset_command.split('|').count.should eq(4)
     end
   end
   
