@@ -8,6 +8,7 @@ module RedisBackedModel
       @model      = model
       @model_id   = model_id
       @definition = definition
+      self
     end
   
     def to_redis

@@ -1,6 +1,6 @@
 module RedisBackedModel
   class RedisBackedModel
-    
+
     def initialize(attributes={})
       if attributes.class == Hash
         attributes.each do |key, value|
@@ -17,12 +17,17 @@ module RedisBackedModel
       instance_variables.each do | var |
         build_command_for_variable(var, redis_commands)
       end
+
+      scores.each do |s|
+        redis_commands << s.to_redis
+      end
+
       redis_commands
     end
     
     private
     
-      attr_reader :id, :scores
+      attr_reader :id
     
       def add_to_instance_variables(key, value)
         if key.match(/score_\[\w+\|\w+\]/)
@@ -33,8 +38,7 @@ module RedisBackedModel
       end
     
       def add_to_scores(key, value)
-        @scores ||= []
-        @scores << SortedSet.new(self.class, id, Hash[key,value])
+        scores << SortedSet.new(self.class, id, Hash[key,value])
       end
       
       def build_command_for_variable(variable, collection)
@@ -59,7 +63,10 @@ module RedisBackedModel
       def model_name_for_redis
         class_as_string = self.class.to_s.demodulize.underscore        
       end
-              
+
+      def scores
+        @scores ||= []
+      end
   end
     
 end
