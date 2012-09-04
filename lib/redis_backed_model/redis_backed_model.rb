@@ -18,10 +18,6 @@ module RedisBackedModel
         build_command_for_variable(var, redis_commands)
       end
 
-      scores.each do |s|
-        redis_commands << s.to_redis
-      end
-
       redis_commands
     end
     
