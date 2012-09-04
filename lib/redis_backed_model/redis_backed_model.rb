@@ -1,6 +1,10 @@
 module RedisBackedModel
   class RedisBackedModel
 
+    def self.exist?(id)
+      ($redis.hgetall("#{self.to_s.underscore}:#{id}").size) > 0 ? true : false   
+    end
+
     def initialize(attributes={})
       if attributes.class == Hash
         attributes.each do |key, value|
