@@ -1,8 +1,13 @@
 module RedisBackedModel
   class RedisBackedModel
 
-    def self.exist?(id)
-      ($redis.hgetall("#{self.to_s.underscore}:#{id}").size) > 0 ? true : false   
+    def self.find(*args)
+      found = []
+      args.flatten.each do |id|
+        attributes = $redis.hgetall("#{self.to_s.underscore}:#{id}")
+        found << self.new(attributes.merge({'id' => id})) if attributes.size > 0
+      end
+      (found.count == 1) ? found.first : found
     end
 
     def initialize(attributes={})

@@ -152,16 +152,40 @@ describe RedisBackedModel do
     rbm.instance_variable_get(:@id).should eq(1)
   end
 
-  context "class method exist?" do
-    before(:each) do
-      $redis.hset 'inheriting_from_redis_backed_model:0', 'foo', 'bar'
+  context "class method 'find'" do 
+    before(:each) do 
+      $redis.hset('inheriting_from_redis_backed_model:0', 'foo', 'bar')
+      $redis.hset('inheriting_from_redis_backed_model:1', 'wibble', 'wobble')
     end
-    it "should return true if hash has keys" do
-      InheritingFromRedisBackedModel.exist?(0).should eq(true)
+    it "should return an array if objects found for ids" do 
+      found = InheritingFromRedisBackedModel.find([0, 1])
+      found.should be_instance_of(Array)
+      found.count.should eq(2)
     end
-  
-    it "should return false if hash is empty" do
-      InheritingFromRedisBackedModel.exist?(1).should eq(false)
+    it "should have objects in the array" do
+      found = InheritingFromRedisBackedModel.find([0, 1])
+      found.each do |f|
+        f.should be_instance_of(InheritingFromRedisBackedModel)
+      end
+    end
+    it "should return an object if only one item is found" do
+      found = InheritingFromRedisBackedModel.find(0)
+      found.should be_instance_of(InheritingFromRedisBackedModel)
+      found.send(:id).should eq(0)
+    end
+    it "should return an object if only one item is found regardless of arguments" do
+      found = InheritingFromRedisBackedModel.find(0,2,3,4,5,6,7)
+      found.should be_instance_of(InheritingFromRedisBackedModel)
+      found.send(:id).should eq(0)
+    end
+    it "should return empty array if nothing found" do
+      found = InheritingFromRedisBackedModel.find(2,3,4,5,6,7)
+      found.should be_instance_of(Array)
+      found.count.should eq(0)
+    end
+    after(:each) do
+      $redis.hdel('inheriting_from_redis_backed_model:0', 'foo')
+      $redis.hdel('inheriting_from_redis_backed_model:1', 'wibble')
     end
   end
 
@@ -187,4 +211,8 @@ describe Person do
     person.name.should eq('jane doe')    
   end
   
+  after(:all) do 
+    $redis.hdel 'person:0', 'first_name'
+    $redis.hdel 'person:0', 'last_name'
+  end
 end
