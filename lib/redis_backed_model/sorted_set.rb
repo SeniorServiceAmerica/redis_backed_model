@@ -5,26 +5,27 @@ module RedisBackedModel
     
   
     def initialize(model, model_id, definition)
-      @model      = model
-      @model_id   = model_id
-      @definition = definition
+      self.model      = model
+      self.model_id   = model_id
+      self.definition = definition
       self
     end
   
+    # Serializes the object as a redis command to create a sorted set.
     def to_redis
       "zadd|#{key}|#{score}|#{member}"
     end
   
     private
       
-      attr_accessor :model, :model_id #, :by_attribute, :score_label, :score
+      attr_accessor :model, :model_id, :definition
       
       def definition_keys
-        @definition.keys.first
+        definition.keys.first
       end
       
       def definition_values
-        @definition.values.first
+        definition.values.first
       end
       
       def key_by
@@ -36,7 +37,7 @@ module RedisBackedModel
       end
 
       def key_model_name
-        @model.to_s.underscore.pluralize
+        model.to_s.underscore.pluralize
       end
 
       def key_for_value
@@ -44,7 +45,7 @@ module RedisBackedModel
       end
 
       def member
-        @model_id
+        model_id
       end
         
       def key

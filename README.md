@@ -22,7 +22,6 @@ Subclass your models from RedisBackedModel::RedisBackedModel
 
 ```ruby
   class Person < RedisBackedModel::RedisBackedModel
-    ...
   end
 ```
 
@@ -46,6 +45,17 @@ You can use RBM to get Redis commands that will save your object as a hash
 
 You can parse these and pass them to Redis yourself or use the gem 'redis_pipeline': https://github.com/SeniorServiceAmerica/redis_pipeline
 
+Once your data is in Redis, you can use RBM to find and instantiate objects:
+
+```ruby
+  p = Person.find(2) => #<Person:0x00000104023a00 @id=2, @first_name=Bill, @last_name=Smith>
+```
+
+You can also find multiple records:
+
+```ruby
+  p = Person.find([1,2,3]) => [person,person,person]
+```
 
 ## Contributing
 

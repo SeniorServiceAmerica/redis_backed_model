@@ -1,5 +1,4 @@
 require "spec_helper"
-require 'extras/person'
 
 describe RedisBackedModel do
   before(:all) do
@@ -189,30 +188,4 @@ describe RedisBackedModel do
     end
   end
 
-end
-
-# test inheriting from RedisBackedModel
-describe Person do 
-  
-  before(:all) do 
-    $redis.hset 'person:0', 'first_name', 'jane'
-    $redis.hset 'person:0', 'last_name', 'doe'
-  end
-
-  it "should set its instance_variables from redis, using RedisBackedModel initialize" do
-    person = Person.find(0)
-    person.instance_variables.include?(:@first_name).should eq(true)
-    person.instance_variables.include?(:@last_name).should eq(true)
-    person.instance_variables.include?(:@id).should eq(true)    
-  end
-    
-  it "should have same name method" do
-    person = Person.find(0)
-    person.name.should eq('jane doe')    
-  end
-  
-  after(:all) do 
-    $redis.hdel 'person:0', 'first_name'
-    $redis.hdel 'person:0', 'last_name'
-  end
 end
