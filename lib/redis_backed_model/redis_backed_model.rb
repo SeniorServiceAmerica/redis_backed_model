@@ -62,7 +62,7 @@ module RedisBackedModel
             collection << redis_object.to_redis
           end
         else
-          collection << instance_variable_to_redis(variable)
+          collection << instance_variable_to_redis(variable) if value
         end
       end
 
@@ -71,7 +71,8 @@ module RedisBackedModel
       end
       
       def instance_variable_to_redis(instance_variable)
-        "hset|#{model_name_for_redis}:#{id}|#{instance_variable.to_s.deinstance_variableize}|#{instance_variable_get(instance_variable.to_s)}"
+        value = instance_variable_get(instance_variable)
+        "hset|#{model_name_for_redis}:#{id}|#{instance_variable.to_s.deinstance_variableize}|#{value}" if value
       end
         
       def model_name_for_redis

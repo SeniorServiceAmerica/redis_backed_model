@@ -84,8 +84,9 @@ describe RedisBackedModel do
     before(:each) do 
       @rbm = InheritingFromRedisBackedModel.new()
       @rbm.instance_variable_set('@id', 1)    
-      @rbm.instance_variable_set('@foo', 20)      
+      @rbm.instance_variable_set('@foo', 20)
     end
+
     it "creates a hset command for instance variables" do 
       @rbm.send(:instance_variable_to_redis, '@foo').should eq("hset|#{@rbm.class.to_s.underscore}:1|foo|20")
     end
@@ -115,6 +116,13 @@ describe RedisBackedModel do
       hset_command = @rbm.send(:instance_variable_to_redis, '@bar')
       hset_command.split('|').count.should eq(4)
     end
+    
+    it "does not include an hset command if the instance variable's value is nil" do
+      @rbm.instance_variable_set('@nil_value', nil)
+      hset_command = @rbm.send(:instance_variable_to_redis, '@nil_value')
+      hset_command.should == nil
+      @rbm.to_redis.count.should == 3
+    end    
   end
   
   it "includes as sadd command in to_redis" do
