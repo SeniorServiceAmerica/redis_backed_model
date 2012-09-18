@@ -1,6 +1,8 @@
 module RedisBackedModel
   class RedisBackedModel
 
+    attr_reader :id
+
     # Finds and returns one or more objects by their id.
     # Pass in a single id or an array of ids.
     #   obj.find(1) => obj
@@ -30,18 +32,15 @@ module RedisBackedModel
     
     # Serializes the object as redis commands.
     def to_redis
-      redis_commands = []
-      redis_commands << id_set_command
-      instance_variables.each do | var |
-        build_command_for_variable(var, redis_commands)
-      end
+      Commands.new(self)
+    end
 
-      redis_commands
+    def model_name_for_redis
+      class_as_string = self.class.to_s.demodulize.underscore        
     end
     
     private
     
-      attr_reader :id
     
       def add_to_instance_variables(key, value)
         if key.match(/score_\[\w+\|\w+\]/)
@@ -55,30 +54,6 @@ module RedisBackedModel
         scores << SortedSet.new(self.class, id, Hash[key,value])
       end
       
-      def build_command_for_variable(variable, collection)
-        value = instance_variable_get(variable)
-        if value.respond_to?(:each)
-          value.each do |redis_object|
-            collection << redis_object.to_redis
-          end
-        else
-          collection << instance_variable_to_redis(variable) if value
-        end
-      end
-
-      def id_set_command
-        "sadd|#{model_name_for_redis}_ids|#{id}"
-      end
-      
-      def instance_variable_to_redis(instance_variable)
-        value = instance_variable_get(instance_variable)
-        "hset|#{model_name_for_redis}:#{id}|#{instance_variable.to_s.deinstance_variableize}|#{value}" if value
-      end
-        
-      def model_name_for_redis
-        class_as_string = self.class.to_s.demodulize.underscore        
-      end
-
       def scores
         @scores ||= []
       end
