@@ -43,7 +43,14 @@ You can use RBM to get Redis commands that will save your object as a hash
   p.to_redis => ["sadd|person_ids|2", "hset|person:2|id|2", "hset|person:2|first_name|Bill", "hset|person:2|last_name|Smith"]
 ```
 
-You can parse these and pass them to Redis yourself or use the gem 'redis_pipeline': https://github.com/SeniorServiceAmerica/redis_pipeline
+If the value of a variable is nil, it is not included in the to_redis commands
+
+```ruby
+  p = Person.new({:id => 2, :first_name => "Bill", :last_name => nil})
+  p.to_redis => ["sadd|person_ids|2", "hset|person:2|id|2", "hset|person:2|first_name|Bill"]
+```
+
+You can parse the to_redis results and pass them to Redis yourself or use the gem 'redis_pipeline': https://github.com/SeniorServiceAmerica/redis_pipeline
 
 Once your data is in Redis, you can use RBM to find and instantiate objects:
 
