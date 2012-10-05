@@ -203,5 +203,18 @@ describe RedisBackedModel do
       $redis.hdel('inheriting_from_redis_backed_model:0', 'foo')
       $redis.hdel('inheriting_from_redis_backed_model:1', 'wibble')
     end
-  end      
+  end 
+  
+  describe "class method exist?" do
+    before(:each) do
+      $redis.hset('inheriting_from_redis_backed_model:0', 'foo', 'bar')
+    end
+    it "should return true is the object exists" do
+      InheritingFromRedisBackedModel.exists?(0).should eq true
+    end
+    it "should return false if the object does not exist" do
+      InheritingFromRedisBackedModel.exists?(1).should eq false
+    end
+  end
+  
 end

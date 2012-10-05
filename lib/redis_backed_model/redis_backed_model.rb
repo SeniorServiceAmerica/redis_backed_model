@@ -3,6 +3,11 @@ module RedisBackedModel
 
     attr_reader :id
 
+    # Checks to see if the redis store has the resource. Returns true if found, false if not 
+    def self.exists?(id)
+      id && find(id) != []
+    end
+
     # Finds and returns one or more objects by their id.
     # Pass in a single id or an array of ids.
     #   obj.find(1) => obj
@@ -12,10 +17,14 @@ module RedisBackedModel
     def self.find(*args)
       found = []
       args.flatten.each do |id|
-        attributes = $redis.hgetall("#{self.to_s.underscore}:#{id}")
+        attributes = $redis.hgetall(instance_redis_hash_key(id))
         found << self.new(attributes.merge({'id' => id})) if attributes.size > 0
       end
       (found.count == 1) ? found.first : found
+    end
+
+    def self.model_name_for_redis
+      self.name.demodulize.underscore
     end
 
     # Instantiates the object with the provided attributes.
@@ -36,12 +45,15 @@ module RedisBackedModel
     end
 
     def model_name_for_redis
-      class_as_string = self.class.to_s.demodulize.underscore        
+      self.class.model_name_for_redis
     end
     
     private
-    
-    
+
+      def self.instance_redis_hash_key(id)
+        "#{model_name_for_redis}:#{id}"
+      end
+        
       def add_to_instance_variables(key, value)
         if key.match(/score_\[\w+\|\w+\]/)
           add_to_scores(key, value)
@@ -53,10 +65,11 @@ module RedisBackedModel
       def add_to_scores(key, value)
         scores << SortedSet.new(self.class, id, Hash[key,value])
       end
-      
+            
       def scores
         @scores ||= []
       end
+  
   end
     
 end
