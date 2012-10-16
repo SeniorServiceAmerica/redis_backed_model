@@ -19,10 +19,8 @@ module RedisBackedModel
 
     def build_command_for_variable(variable)
       value = @obj.instance_variable_get(variable)
-      if value.respond_to?(:each)
-        value.each do |redis_object|
-          self << redis_object.to_redis
-        end
+      if value.respond_to?(:to_redis)
+        self << value.to_redis
       elsif value
         self << instance_variable_to_redis(variable,value)
       end

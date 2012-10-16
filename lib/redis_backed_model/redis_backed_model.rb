@@ -55,19 +55,29 @@ module RedisBackedModel
       end
         
       def add_to_instance_variables(key, value)
-        if key.match(/score_\[\w+\|\w+\]/)
-          add_to_scores(key, value)
+        if is_a_sorted_set?(key)
+          sorted_set_instance_variable(key,value)
         else
           self.instance_variable_set("@#{key}", value) 
         end
       end
-    
-      def add_to_scores(key, value)
-        scores << SortedSet.new(self.class, id, Hash[key,value])
+          
+      def is_a_sorted_set?(key)
+        if key.match(/score_\[\w+\|\w+\]/)
+          true
+        else
+          false
+        end
       end
             
-      def scores
-        @scores ||= []
+      def sorted_set_instance_variable(key, value)
+        self.instance_variable_set("@#{sorted_set_key(key)}", SortedSet.new(self.class, id, Hash[key,value]))
+      end
+      
+      def sorted_set_key(key)
+        # move knowledge of this regex to sortedset 
+        match = key.match(/score_\[(\w+)\|(\w+)\]/)
+        "sorted_set_for_#{match[1]}_by_#{match[2]}"
       end
   
   end
