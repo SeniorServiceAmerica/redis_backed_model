@@ -3,6 +3,9 @@ module RedisBackedModel
   class SortedSet
   require 'date'
     
+    def self.matches?(key)
+      key.match(/score_\[(\w+)\|(\w+)\]/) ? true : false
+    end
   
     def initialize(model, model_id, definition)
       self.model      = model

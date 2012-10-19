@@ -5,6 +5,21 @@ describe RedisBackedModel::SortedSet do
     
   end
   
+  describe "matches?" do
+    it "returns true if the string matches pattern score_[foo|bar]" do
+      RedisBackedModel::SortedSet.matches?('score_[foo|bar]').should eq(true)
+    end
+    
+    it "returns false on near misses" do
+      near_misses = ['score[foo|bar]', 'score_foo|bar', 'score-[foo|bar]', 'scor_[foo|bar]', 
+                        'score_[foobar]', 'score_foo|bar]', 'score_[foo|bar', 'score']
+      near_misses.each do |no_match|
+        RedisBackedModel::SortedSet.matches?(no_match).should eq(false)
+      end
+    end
+    
+  end
+  
   describe "to_redis" do
 
     it "returns zadd|model_name_pluralized + '_for_' + foo + '_by_' + bar + ':' + foo_id|bar_score|model_id' as to_redis" do 
