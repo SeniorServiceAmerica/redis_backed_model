@@ -13,6 +13,18 @@ module RedisBackedModel
       self.definition = definition
       self
     end
+    
+    # def initialize(object, definition)
+    #   self.model        = object.class
+    #   self.model_id     = object.id
+    #   self.definition   = definition
+    #   self
+    # end
+  
+    # Returns a description of the object that does not contain illegal characters
+    def to_instance_variable_name
+      "sorted_set_for_#{key_for}_by_#{key_by}".instance_variableize
+    end
   
     # Serializes the object as a redis command to create a sorted set.
     def to_redis
