@@ -50,7 +50,7 @@ module RedisBackedModel
     
     private
     
-      def self.data_types
+      def self.data_structures
         [
           SortedSet
         ]
@@ -60,6 +60,18 @@ module RedisBackedModel
         "#{model_name_for_redis}:#{id}"
       end
         
+      def add_to_instance_variables(key, value)
+        if (data_structure = matching_data_structure(key))
+          data_structure.new(self, Hash[key, value]).add_to(self)
+        else
+          self.instance_variable_set("@#{key}", value) 
+        end        
+      end
+
+      def matching_data_structure(key)
+        self.class.data_structures.detect{ |data_type| data_type.matches?(key) }
+      end
+
       # def add_to_instance_variables(key, value)
       #   if is_a_sorted_set?(key)
       #     sorted_set_instance_variable(key,value)
@@ -67,18 +79,6 @@ module RedisBackedModel
       #     self.instance_variable_set("@#{key}", value) 
       #   end
       # end
-
-      def add_to_instance_variables(key, value)
-        if (data_type = matching_data_type(key))
-          data_type.new(self, Hash[key, value]).add_to(self)
-        else
-          self.instance_variable_set("@#{key}", value) 
-        end        
-      end
-
-      def matching_data_type(key)
-        self.class.data_types.detect{ |data_type| data_type.matches?(key) }
-      end
           
       # def is_a_sorted_set?(key)
       #   SortedSet.matches?(key)
