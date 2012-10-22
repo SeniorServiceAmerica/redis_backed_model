@@ -67,8 +67,7 @@ module RedisBackedModel
       end
             
       def sorted_set_instance_variable(key, value)
-        sorted_set = SortedSet.new(self.class, id, Hash[key,value])
-        self.instance_variable_set(sorted_set.to_instance_variable_name, sorted_set)        
+        SortedSet.new(self, Hash[key,value]).add_to(self)
       end
         
   end
