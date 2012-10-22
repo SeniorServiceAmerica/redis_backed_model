@@ -49,26 +49,44 @@ module RedisBackedModel
     end
     
     private
+    
+      def self.data_types
+        [
+          SortedSet
+        ]
+      end
 
       def self.instance_redis_hash_key(id)
         "#{model_name_for_redis}:#{id}"
       end
         
+      # def add_to_instance_variables(key, value)
+      #   if is_a_sorted_set?(key)
+      #     sorted_set_instance_variable(key,value)
+      #   else
+      #     self.instance_variable_set("@#{key}", value) 
+      #   end
+      # end
+
       def add_to_instance_variables(key, value)
-        if is_a_sorted_set?(key)
-          sorted_set_instance_variable(key,value)
+        if (data_type = matching_data_type(key))
+          data_type.new(self, Hash[key, value]).add_to(self)
         else
           self.instance_variable_set("@#{key}", value) 
-        end
+        end        
+      end
+
+      def matching_data_type(key)
+        self.class.data_types.detect{ |data_type| data_type.matches?(key) }
       end
           
-      def is_a_sorted_set?(key)
-        SortedSet.matches?(key)
-      end
-            
-      def sorted_set_instance_variable(key, value)
-        SortedSet.new(self, Hash[key,value]).add_to(self)
-      end
+      # def is_a_sorted_set?(key)
+      #   SortedSet.matches?(key)
+      # end
+      #       
+      # def sorted_set_instance_variable(key, value)
+      #   SortedSet.new(self, Hash[key,value]).add_to(self)
+      # end
         
   end
     
