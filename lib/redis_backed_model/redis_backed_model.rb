@@ -32,7 +32,7 @@ module RedisBackedModel
     def initialize(attributes={})
       if attributes.class == Hash
         attributes.each do |key, value|
-          add_to_instance_variables(key, value)
+          add_instance_variable(key, value)
         end
       else
         raise ArgumentError
@@ -52,6 +52,7 @@ module RedisBackedModel
     
       def self.data_structures
         [
+          RedisSet,
           SortedSet
         ]
       end
@@ -60,9 +61,13 @@ module RedisBackedModel
         "#{model_name_for_redis}:#{id}"
       end
         
-      def add_to_instance_variables(key, value)
+      def add_data_structure(data_structure)
+        self.instance_variable_set(data_structure.to_instance_variable_name, data_structure)
+      end
+        
+      def add_instance_variable(key, value)
         if (data_structure = matching_data_structure(key))
-          data_structure.new(self, Hash[key, value]).add_to(self)
+          add_data_structure(data_structure.new(self, Hash[key, value]))
         else
           self.instance_variable_set("@#{key}", value) 
         end        

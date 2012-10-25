@@ -2,7 +2,7 @@ module RedisBackedModel
   class Commands < Array
     def initialize(obj)
       @obj = obj
-      self << id_set_command
+      # self << id_set_command
 
       @obj.instance_variables.each do | var |
         build_command_for_variable(var)
@@ -13,9 +13,9 @@ module RedisBackedModel
     
     private
     
-    def id_set_command
-      "sadd|#{@obj.model_name_for_redis}_ids|#{@obj.id}"
-    end 
+    # def id_set_command
+    #   "sadd|#{@obj.model_name_for_redis}_ids|#{@obj.id}"
+    # end 
 
     def build_command_for_variable(variable)
       value = @obj.instance_variable_get(variable)

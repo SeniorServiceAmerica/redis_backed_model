@@ -7,25 +7,11 @@ module RedisBackedModel
       key.match(/score_\[(\w+)\|(\w+)\]/) ? true : false
     end
   
-    # def initialize(model, model_id, definition)
-    #   self.model      = model
-    #   self.model_id   = model_id
-    #   self.definition = definition
-    #   self
-    # end
-    
     def initialize(object, definition)
       self.model        = object.class
       self.model_id     = object.id
       self.definition   = definition
       self
-    end
-
-    # sets a instance variable on object
-    #  variable name is to_instance_variable_name
-    #  value is self
-    def add_to(object)
-      object.instance_variable_set(self.to_instance_variable_name, self)
     end
 
     # Returns a description of the object that does not contain illegal characters

@@ -6,7 +6,7 @@ describe RedisBackedModel::SortedSet do
     
   end
   
-  describe "class method matches?" do
+  describe ".matches?" do
     it "returns true if the string matches pattern score_[foo|bar]" do
       RedisBackedModel::SortedSet.matches?('score_[foo|bar]').should eq(true)
     end
@@ -24,12 +24,12 @@ describe RedisBackedModel::SortedSet do
 
   describe "instance methods" do
     before(:each) do
-      @object = OpenStruct.new(:id => 1)
+      @redis_backed_model = OpenStruct.new(:id => 1)
       @attributes = {'score_[foo|bar]' => '[foo_id|bar_score]'}
-      @sorted_set = RedisBackedModel::SortedSet.new(@object, {'score_[foo|bar]' => '[foo_id|bar_score]'})
+      @sorted_set = RedisBackedModel::SortedSet.new(@redis_backed_model, {'score_[foo|bar]' => '[foo_id|bar_score]'})
     end
   
-    describe "to_instance_variable_name" do
+    describe "#to_instance_variable_name" do
       before(:each) do
         @name_as_string = @sorted_set.to_instance_variable_name.to_s.deinstance_variableize
       end
@@ -54,34 +54,27 @@ describe RedisBackedModel::SortedSet do
     
     end
   
-    describe "to_redis" do
+    describe "#to_redis" do
       it "returns zadd|model_name_pluralized + '_for_' + foo + '_by_' + bar + ':' + foo_id|bar_score|model_id' as to_redis" do 
         @sorted_set.to_redis.should eq('zadd|open_structs_for_foo_by_bar:foo_id|bar_score|1')        
       end
     
       context "given a 'score_[x,y]' where y == 'date'" do
         it "converts date part of value to miliseconds" do 
-          sorted_set = RedisBackedModel::SortedSet.new(@object, {'score_[foo|date]'=>'[foo_id|2012-03-04]'})
+          sorted_set = RedisBackedModel::SortedSet.new(@redis_backed_model, {'score_[foo|date]'=>'[foo_id|2012-03-04]'})
           date_in_milliseconds = Date.civil(2012,3,4).to_time.to_f
-          sorted_set.to_redis.should eq("zadd|open_structs_for_foo_by_date:foo_id|#{date_in_milliseconds}|#{@object.id}")
+          sorted_set.to_redis.should eq("zadd|open_structs_for_foo_by_date:foo_id|#{date_in_milliseconds}|#{@redis_backed_model.id}")
         end
       end
       
       context "given definition value containing a date where y in 'score_[x|y]' != 'date' " do
         it "leave does not convert the value" do
-          sorted_set = RedisBackedModel::SortedSet.new(@object, {'score_[foo|bar]'=>'[foo_id|2012-03-04]'})
-          sorted_set.to_redis.should eq("zadd|open_structs_for_foo_by_bar:foo_id|2012-03-04|#{@object.id}")          
+          sorted_set = RedisBackedModel::SortedSet.new(@redis_backed_model, {'score_[foo|bar]'=>'[foo_id|2012-03-04]'})
+          sorted_set.to_redis.should eq("zadd|open_structs_for_foo_by_bar:foo_id|2012-03-04|#{@redis_backed_model.id}")          
         end
       end
     end
     
-    describe "add_to" do
-      it "adds an instance variable to object" do
-        object = double("object")
-        object.should_receive(:instance_variable_set).with(@sorted_set.to_instance_variable_name, @sorted_set)
-        @sorted_set.add_to(object)
-      end
-    end
   end
   
 end

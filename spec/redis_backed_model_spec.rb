@@ -162,7 +162,7 @@ describe RedisBackedModel do
 
   end
 
-  describe "class method 'find'" do 
+  describe ".find" do 
     before(:each) do 
       $redis.hset('inheriting_from_redis_backed_model:0', 'foo', 'bar')
       $redis.hset('inheriting_from_redis_backed_model:1', 'wibble', 'wobble')
@@ -199,7 +199,7 @@ describe RedisBackedModel do
     end
   end 
   
-  describe "class method exist?" do
+  describe ".exist?" do
     before(:each) do
       $redis.hset('inheriting_from_redis_backed_model:0', 'foo', 'bar')
     end
