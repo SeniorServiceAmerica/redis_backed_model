@@ -52,6 +52,7 @@ module RedisBackedModel
     
       def self.data_structures
         [
+          RedisHash,
           RedisSet,
           SortedSet
         ]
@@ -66,15 +67,17 @@ module RedisBackedModel
       end
         
       def add_instance_variable(key, value)
-        if (data_structure = matching_data_structure(key))
-          add_data_structure(data_structure.new(self, Hash[key, value]))
+        if (matched_data_structures = matching_data_structure(key))
+          matched_data_structures.each do |match|
+            add_data_structure(match.new(self, Hash[key, value]))
+          end
         else
           self.instance_variable_set("@#{key}", value) 
         end        
       end
 
       def matching_data_structure(key)
-        self.class.data_structures.detect{ |data_type| data_type.matches?(key) }
+        self.class.data_structures.select{ |data_type| data_type.matches?(key) }
       end
 
       # def add_to_instance_variables(key, value)

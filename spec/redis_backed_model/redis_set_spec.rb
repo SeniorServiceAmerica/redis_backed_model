@@ -14,20 +14,20 @@ describe RedisBackedModel::RedisSet do
   end
   
   describe "#to_instance_variable_name" do
-    let(:definition_attrs) { Hash['id', 1] }    
+    let(:definition_attrs) { Hash['id', 1] }
     let(:redis_backed_model) { OpenStruct.new(id:1) }
-    let(:redis_set) { RedisBackedModel::RedisSet.new(redis_backed_model, definition_attrs)}
+    let(:instance_variable_name_string) { RedisBackedModel::RedisSet.new(redis_backed_model, definition_attrs).to_instance_variable_name.to_s.deinstance_variableize}
     
     it "begins with 'set'" do
-      redis_set.to_instance_variable_name.split('_')[0].to_s.should eq('set')
+      instance_variable_name_string.split('_')[0].to_s.should eq('set')
     end
     
     it "ends with the key as string" do
-      redis_set.to_instance_variable_name.split('_')[1].to_s.should eq('ids')      
+      instance_variable_name_string.split('_')[1].to_s.should eq('ids')      
     end
     
     it "has no other parts" do
-      redis_set.to_instance_variable_name.split('_').count.should eq(2)      
+      instance_variable_name_string.split('_').count.should eq(2)      
     end
   end
   
