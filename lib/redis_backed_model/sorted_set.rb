@@ -3,13 +3,12 @@ module RedisBackedModel
   class SortedSet
   require 'date'
     
-    def self.matches?(key)
-      key.match(/score_\[(\w+)\|(\w+)\]/) ? true : false
+    def self.matches?(attribute_hash)
+      (attribute_hash.keys.first.match(/score_\[(\w+)\|(\w+)\]/) && attribute_hash.values.first) ? true : false
     end
   
-    def initialize(object, definition)
-      self.model        = object.class
-      self.model_id     = object.id
+    def initialize(model, definition)
+      self.model        = model
       self.definition   = definition
       self
     end
@@ -45,7 +44,8 @@ module RedisBackedModel
       end
 
       def key_model_name
-        model.to_s.underscore.pluralize
+        # model.to_s.underscore.pluralize
+        model.model_name_for_redis.pluralize
       end
 
       def key_for_value
@@ -53,7 +53,7 @@ module RedisBackedModel
       end
 
       def member
-        model_id
+        model.id
       end
         
       def key

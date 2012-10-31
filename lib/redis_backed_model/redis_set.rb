@@ -1,13 +1,12 @@
 module RedisBackedModel
   class RedisSet
 
-    def self.matches?(key)
-      key.to_s == 'id'
+    def self.matches?(attribute_hash)
+      attribute_hash.keys.first.to_s == 'id' && !attribute_hash.values.first.nil?
     end
 
-    def initialize(object, definition)
-      self.model        = object.class
-      self.model_id     = object.id
+    def initialize(model, definition)
+      self.model        = model
       self.definition   = definition
       self
     end
@@ -22,7 +21,7 @@ module RedisBackedModel
 
     private 
     
-      attr_accessor :model, :model_id, :definition
+      attr_accessor :model, :definition
 
       def key
         "#{model.model_name_for_redis}_#{key_name}"
