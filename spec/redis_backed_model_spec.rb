@@ -14,39 +14,43 @@ describe RedisBackedModel do
       @attributes_with_id[key] = i
     end
     @attributes_with_id['id'] = 1
-    @size += 1
   end
   
   describe "on initialization" do 
   
-    it "has no instance variables unless specified" do 
-      rbm = InheritingFromRedisBackedModel.new
-      rbm.instance_variables.count.should eq(0)
-    end
+    # it "has no instance variables unless specified" do 
+    #   rbm = InheritingFromRedisBackedModel.new
+    #   rbm.instance_variables.count.should eq(0)
+    # end
 
     it "creates an instance variable if given a hash with one member" do
-      pending("revisit once redis data structures in place")
-      # attributes = {'id' => 1}
-      # rbm = InheritingFromRedisBackedModel.new(attributes)
-      # rbm.instance_variables.include?(:@id).should eq(true)
+      attributes = {'id' => 1}
+      rbm = InheritingFromRedisBackedModel.new(attributes)
+      rbm.instance_variables.include?(:@id).should eq(true)
     end
 
-    it "creates instance variables for each member of an attribute hash" do
-      pending("revisit once redis data structures in place")      
-      # rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
-      # rbm.instance_variables.count.should eq(@size)
-      # @attributes_with_id.each do | key, value|
-      #   rbm.instance_variables.include?(key.instance_variableize).should eq(true), "no instance variable for #{key}"      
-      # end
+    it "creates instance variables for each member of an attribute hash" do      
+      rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
+      rbm.instance_variables.count.should eq(@attributes_with_id.size + 1), "iv: #{rbm.instance_variables.inspect} attr: #{@attributes_with_id.inspect}"
+      @attributes_with_id.each do | key, value|
+        rbm.instance_variables.include?(key.instance_variableize).should eq(true), "no instance variable for #{key}"      
+      end
     end
+
+    it "creates attr_readers for each member of an attribute hash" do    
+      rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
+      @attributes_with_id.each do | key, value|
+        rbm.respond_to?(key).should eq(true), "no method for #{key}"      
+      end
+    end
+
 
     context "given an attribute hash with symbols for keys" do
       it "converts symbol attributes to strings" do
-        pending("revisit once redis data structures in place")
-        # attributes = {:id => 1, :first_name => 'jane', :last_name => 'doe'}
-        # rbm = InheritingFromRedisBackedModel.new(attributes)
-        # rbm.instance_variables.include?(:@id).should eq(true)
-        # rbm.instance_variable_get(:@id).should eq(1)
+        attributes = {:id => 1, :first_name => 'jane', :last_name => 'doe'}
+        rbm = InheritingFromRedisBackedModel.new(attributes)
+        rbm.instance_variables.include?(:@id).should eq(true)
+        rbm.instance_variable_get(:@id).should eq(1)
       end
     end
 
@@ -61,17 +65,19 @@ describe RedisBackedModel do
         scores = {'score_[foo|bar]' => '[1|2]', 'score_[qux|quux]' => '[i,ii]', 'score_[wibble|wobble]' => '[a|b]'}
         @attributes_with_id.merge!(scores)
       end
-      it "creates an instance variable for each score_[baz|wubble] called sorted_set_for_baz_by_wubble" do 
-        rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
-        rbm.instance_variables.should include('sorted_set_for_foo_by_bar'.instance_variableize)
-        rbm.instance_variables.should include('sorted_set_for_qux_by_quux'.instance_variableize)
-        rbm.instance_variables.should include('sorted_set_for_wibble_by_wobble'.instance_variableize)
-      end
       
-      it "saves a SortedSet as the value of the score instance variable" do
-        rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
-        rbm.instance_variable_get('sorted_set_for_foo_by_bar'.instance_variableize).class.should eq(RedisBackedModel::SortedSet)
-      end
+      # changing behavior no longer stores sorted sets in instance variables
+      # it "creates an instance variable for each score_[baz|wubble] called sorted_set_for_baz_by_wubble" do 
+      #   rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
+      #   rbm.instance_variables.should include('sorted_set_for_foo_by_bar'.instance_variableize)
+      #   rbm.instance_variables.should include('sorted_set_for_qux_by_quux'.instance_variableize)
+      #   rbm.instance_variables.should include('sorted_set_for_wibble_by_wobble'.instance_variableize)
+      # end
+      # 
+      # it "saves a SortedSet as the value of the score instance variable" do
+      #   rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
+      #   rbm.instance_variable_get('sorted_set_for_foo_by_bar'.instance_variableize).class.should eq(RedisBackedModel::SortedSet)
+      # end
 
       # sorted set no longer matches these so it gets ignored
       # it "raises a name error for near matches with '[]'" do
@@ -105,15 +111,15 @@ describe RedisBackedModel do
       end
 
       it "returns two hset commands" do
-        pending("revisit once redis data structures in place")
-        # @hset_commands.count.should eq(2)
+        # pending("revisit once redis data structures in place")
+        @hset_commands.count.should eq(2)
       end
 
       it "has hset commands with format 'hset|model_name:id|variable_name|variable|value'" do
-        pending("revisit once redis data structures in place")        
-        # @attributes.each do |variable_name,value|
-        #   @hset_commands.should include("hset|#{@obj.model_name_for_redis}:#{@obj.id}|#{variable_name}|#{value}") 
-        # end
+        # pending("revisit once redis data structures in place")        
+        @attributes.each do |variable_name,value|
+          @hset_commands.should include("hset|#{@obj.model_name_for_redis}:#{@obj.id}|#{variable_name}|#{value}") 
+        end
       end
       
     end
@@ -127,11 +133,11 @@ describe RedisBackedModel do
       end
 
       it "ignores the nil variable when creating commands" do
-        pending("revisit once redis data structures in place")        
-        # @hset_commands.count.should == 1
-        # @hset_commands.each do |command| 
-        #   command.should include("id")
-        # end
+        # pending("revisit once redis data structures in place")        
+        @hset_commands.count.should == 1
+        @hset_commands.each do |command| 
+          command.should include("id")
+        end
       end
     end
     
@@ -158,9 +164,9 @@ describe RedisBackedModel do
       end
 
       it "creates hset commands for each non-'score_' attribute" do
-        pending("revisit once redis data structures in place")
-        # expected = @attributes_with_id.keys.count - @scores.count
-        # @rbm.to_redis.select {|command| command.match(/hset/)}.count.should eq(expected)
+        # pending("revisit once redis data structures in place")
+        expected = @attributes_with_id.keys.count - @scores.count
+        @rbm.to_redis.select {|command| command.match(/hset/)}.count.should eq(expected)
       end
 
       it "creates sorted_set (zadd) commands for each score attribute" do 
@@ -187,16 +193,14 @@ describe RedisBackedModel do
       end
     end
     it "should return an object if only one item is found" do
-      pending("revisit once redis data structures in place")      
-      # found = InheritingFromRedisBackedModel.find(0)
-      # found.should be_instance_of(InheritingFromRedisBackedModel)
-      # found.id.should eq(0)
+      found = InheritingFromRedisBackedModel.find(0)
+      found.should be_instance_of(InheritingFromRedisBackedModel)
+      found.id.should eq(0)
     end
     it "should return an object if only one item is found regardless of arguments" do
-      pending("revisit once redis data structures in place")
-      # found = InheritingFromRedisBackedModel.find(0,2,3,4,5,6,7)
-      # found.should be_instance_of(InheritingFromRedisBackedModel)
-      # found.id.should eq(0)
+      found = InheritingFromRedisBackedModel.find(0,2,3,4,5,6,7)
+      found.should be_instance_of(InheritingFromRedisBackedModel)
+      found.id.should eq(0)
     end
     it "should return empty array if nothing found" do
       found = InheritingFromRedisBackedModel.find(2,3,4,5,6,7)

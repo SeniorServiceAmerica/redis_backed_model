@@ -11,10 +11,14 @@ module RedisBackedModel
       self
     end
 
+    def attr_able?
+      false
+    end
+
     def to_instance_variable_name
       "set_#{key_name}".instance_variableize
     end
-    
+
     def to_redis
       "sadd|#{key}|#{member}"
     end

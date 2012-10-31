@@ -28,6 +28,23 @@ describe RedisBackedModel::RedisHash do
     end
     
   end
+
+  describe "#attr_able" do
+    let(:redis_hash) { RedisBackedModel::RedisHash.new(Object.new, Hash.new)}
+    it "returns true" do
+      redis_hash.attr_able?.should eq(true)
+    end
+  end
+  
+  describe "#attr_name" do
+    let(:definition_attrs) { Hash['some_key', 'some_value'] }
+    let(:attr_name) { RedisBackedModel::RedisHash.new(Object.new, definition_attrs).attr_name }
+    
+    it "is the same as the attribute key" do
+      attr_name.should eq(definition_attrs.keys.first)
+    end   
+  end
+
   
   describe "#to_instance_variable_name (converted to a string)" do
     let(:definition_attrs) { Hash['some_key', 'some_value'] }
@@ -36,11 +53,20 @@ describe RedisBackedModel::RedisHash do
     let(:instance_variable_name) { RedisBackedModel::RedisHash.new(redis_backed_model, definition_attrs).to_instance_variable_name}
     
     it "is the same as the attribute key" do
-      instance_variable_name.to_s.deinstance_variableize.should eq(definition_attrs.keys.first)
-    end
-        
+      instance_variable_name.should eq(definition_attrs.keys.first.instance_variableize)
+    end   
   end
   
+  describe "#to_instance_variable_value" do
+    let(:definition_attrs) { Hash['some_key', 'some_value'] }
+    let(:redis_backed_model) { double('redis_backed_model')}
+    let(:instance_variable_value) { RedisBackedModel::RedisHash.new(redis_backed_model, definition_attrs).to_instance_variable_value }
+    
+    it "returns the attribute value" do
+      instance_variable_value.should eq(definition_attrs.values.first)
+    end
+  end
+    
   describe "#to_redis" do
     let(:definition_attrs) { Hash['some_key', 'some_value'] }
     # let(:redis_backed_model) { RedisBackedModel::RedisBackedModel.new(id:1) }
@@ -93,6 +119,5 @@ describe RedisBackedModel::RedisHash do
       end
     end
   end
-  
   
 end

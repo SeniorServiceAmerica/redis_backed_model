@@ -65,4 +65,10 @@ describe RedisBackedModel::RedisSet do
     
   end
   
+  describe "#attr_able?" do
+    let(:redis_set) { RedisBackedModel::RedisSet.new(Object.new, Hash['id', 1]) }
+    it "returns false" do
+      redis_set.attr_able?.should eq(false)
+    end
+  end
 end

@@ -10,9 +10,21 @@ module RedisBackedModel
       self.definition   = definition
       self      
     end
+    
+    def attr_able?
+      true
+    end
+
+    def attr_name
+      redis_hash_field
+    end
 
     def to_instance_variable_name
       redis_hash_field.instance_variableize
+    end
+
+    def to_instance_variable_value
+      redis_hash_value
     end
 
     def to_redis

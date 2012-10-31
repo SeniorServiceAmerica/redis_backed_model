@@ -1,14 +1,22 @@
 module RedisBackedModel
   class Commands < Array
-    def initialize(obj)
-      @obj = obj
-      # self << id_set_command
+    # def initialize(obj)
+    #   @obj = obj
+    #   # self << id_set_command
+    # 
+    #   @obj.instance_variables.each do | var |
+    #     build_command_for_variable(var)
+    #   end
+    #   
+    #   self
+    # end
 
-      @obj.instance_variables.each do | var |
-        build_command_for_variable(var)
-      end
+    def to_instance_variables
       
-      self
+    end
+    
+    def to_redis
+      self.map { |data_structure| data_structure.to_redis }
     end
     
     private
@@ -17,17 +25,17 @@ module RedisBackedModel
     #   "sadd|#{@obj.model_name_for_redis}_ids|#{@obj.id}"
     # end 
 
-    def build_command_for_variable(variable)
-      value = @obj.instance_variable_get(variable)
-      if value.respond_to?(:to_redis)
-        self << value.to_redis
-      elsif value
-        self << instance_variable_to_redis(variable,value)
-      end
-    end
-
-    def instance_variable_to_redis(instance_variable,value)
-      "hset|#{@obj.model_name_for_redis}:#{@obj.id}|#{instance_variable.to_s.deinstance_variableize}|#{value}"
-    end  
+    # def build_command_for_variable(variable)
+    #   value = @obj.instance_variable_get(variable)
+    #   if value.respond_to?(:to_redis)
+    #     self << value.to_redis
+    #   elsif value
+    #     self << instance_variable_to_redis(variable,value)
+    #   end
+    # end
+    # 
+    # def instance_variable_to_redis(instance_variable,value)
+    #   "hset|#{@obj.model_name_for_redis}:#{@obj.id}|#{instance_variable.to_s.deinstance_variableize}|#{value}"
+    # end  
   end
 end

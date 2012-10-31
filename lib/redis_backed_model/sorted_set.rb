@@ -13,6 +13,10 @@ module RedisBackedModel
       self
     end
 
+    def attr_able?
+      false
+    end
+
     # Returns a description of the object that does not contain illegal characters
     def to_instance_variable_name
       "sorted_set_for_#{key_for}_by_#{key_by}".instance_variableize

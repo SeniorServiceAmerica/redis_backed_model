@@ -84,5 +84,11 @@ describe RedisBackedModel::SortedSet do
     
   end
     
+  describe "#attr_able?" do
+    it "returns false" do
+      sorted_set = RedisBackedModel::SortedSet.new(OpenStruct.new(:id => 1), {'score_[foo|bar]' => '[foo_id|bar_score]'})
+      sorted_set.attr_able?.should eq(false)
+    end
+  end
   
 end

@@ -27,21 +27,32 @@ module RedisBackedModel
       self.name.demodulize.underscore
     end
 
-    # Instantiates the object with the provided attributes.
-    # If the object does not have an instance variable that matches one of the passed attributes, one will be created.
+    # Instantiates the object using the provided attributes.
+    # Object creates a data structure (hash, set, sorted set) for each attribute. 
+    # It then reflects on these structures to set instance variables.
     def initialize(attributes={})
+      self.commands = []
+      
       if attributes.class == Hash
         attributes.each do |key, value|
-          add_instance_variable(key, value)
+          # add_instance_variable(key, value)
+          add_to_commands(Hash[key, value])
         end
       else
         raise ArgumentError
       end
+      
+      commands.select {|c| c.attr_able? }.each do |r|
+        self.instance_variable_set(r.to_instance_variable_name, r.to_instance_variable_value)
+        self.class.send(:attr_reader, r.to_instance_variable_name.to_s.deinstance_variableize)
+      end
+      
     end
     
     # Serializes the object as redis commands.
     def to_redis
-      Commands.new(self)
+      # Commands.new(self)
+      commands.map { |c| c.to_redis }
     end
 
     def model_name_for_redis
@@ -49,6 +60,8 @@ module RedisBackedModel
     end
     
     private
+    
+      attr_accessor :commands
     
       def self.data_structures
         [
@@ -61,40 +74,32 @@ module RedisBackedModel
       def self.instance_redis_hash_key(id)
         "#{model_name_for_redis}:#{id}"
       end
-        
-      def add_data_structure(data_structure)
-        self.instance_variable_set(data_structure.to_instance_variable_name, data_structure)
-      end
-        
-      def add_instance_variable(key, value)
-        if (matched_data_structures = matching_data_structure(key))
+
+      def add_to_commands(attribute_pair)
+        if (matched_data_structures = matching_data_structures(attribute_pair))
           matched_data_structures.each do |match|
-            add_data_structure(match.new(self, Hash[key, value]))
+            commands << match.new(self, attribute_pair)
           end
-        else
-          self.instance_variable_set("@#{key}", value) 
-        end        
+        end
       end
 
-      def matching_data_structure(key)
-        self.class.data_structures.select{ |data_type| data_type.matches?(key) }
-      end
-
-      # def add_to_instance_variables(key, value)
-      #   if is_a_sorted_set?(key)
-      #     sorted_set_instance_variable(key,value)
+      # def add_data_structure(data_structure)
+      #   self.instance_variable_set(data_structure.to_instance_variable_name, data_structure)
+      # end
+      #   
+      # def add_instance_variable(key, value)
+      #   if (matched_data_structures = matching_data_structure(key))
+      #     matched_data_structures.each do |match|
+      #       add_data_structure(match.new(self, Hash[key, value]))
+      #     end
       #   else
       #     self.instance_variable_set("@#{key}", value) 
-      #   end
+      #   end        
       # end
-          
-      # def is_a_sorted_set?(key)
-      #   SortedSet.matches?(key)
-      # end
-      #       
-      # def sorted_set_instance_variable(key, value)
-      #   SortedSet.new(self, Hash[key,value]).add_to(self)
-      # end
+
+      def matching_data_structures(attribute_pair)
+        self.class.data_structures.select{ |data_type| data_type.matches?(attribute_pair) }
+      end
         
   end
     
