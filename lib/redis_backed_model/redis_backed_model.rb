@@ -31,26 +31,21 @@ module RedisBackedModel
     # Object creates a data structure (hash, set, sorted set) for each attribute. 
     # It then reflects on these structures to set instance variables.
     def initialize(attributes={})
-      self.commands = []
+      self.data = []
       
       if attributes.class == Hash
         attributes.each do |key, value|
-          add_to_commands(Hash[key, value])
+          add_data(Hash[key, value])
         end
       else
         raise ArgumentError
-      end
-      
-      commands.select {|c| c.attr_able? }.each do |r|
-        add_attr_reader(r)
       end
       
     end
     
     # Serializes the object as redis commands.
     def to_redis
-      # Commands.new(self)
-      commands.map { |c| c.to_redis }
+      data.map { |c| c.to_redis }
     end
 
     def model_name_for_redis
@@ -59,9 +54,9 @@ module RedisBackedModel
     
     private
     
-      attr_accessor :commands
+      attr_accessor :data
     
-      def self.data_structures
+      def self.redis_data_structures
         [
           RedisHash,
           RedisSet,
@@ -78,16 +73,16 @@ module RedisBackedModel
         self.class.class_eval { attr_reader data_structure.attr_name }
       end
 
-      def add_to_commands(attribute_pair)
-        if (matched_data_structures = matching_data_structures(attribute_pair))
-          matched_data_structures.each do |match|
-            commands << match.new(self, attribute_pair)
-          end
+      def add_data(attribute_pair)
+        matching_data_structures(attribute_pair).each do |data_structure|
+          attribute_data = data_structure.new(self, attribute_pair)
+          data << attribute_data
+          add_attr_reader(attribute_data) if attribute_data.attr_able?
         end
       end
 
       def matching_data_structures(attribute_pair)
-        self.class.data_structures.select{ |data_type| data_type.matches?(attribute_pair) }
+        self.class.redis_data_structures.select{ |structure| structure.matches?(attribute_pair) }
       end
         
   end
