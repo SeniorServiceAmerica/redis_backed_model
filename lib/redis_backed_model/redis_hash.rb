@@ -15,7 +15,7 @@ module RedisBackedModel
       true
     end
 
-    def attr_name
+    def to_attr_name
       redis_hash_field.to_sym
     end
 

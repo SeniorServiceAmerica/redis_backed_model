@@ -70,7 +70,7 @@ module RedisBackedModel
 
       def add_attr_reader(data_structure)
         self.instance_variable_set(data_structure.to_instance_variable_name, data_structure.to_instance_variable_value)
-        self.class.class_eval { attr_reader data_structure.attr_name }
+        self.class.class_eval { attr_reader data_structure.to_attr_name }
       end
 
       def add_data(attribute_pair)
