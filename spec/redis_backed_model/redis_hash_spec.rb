@@ -40,8 +40,8 @@ describe RedisBackedModel::RedisHash do
     let(:definition_attrs) { Hash['some_key', 'some_value'] }
     let(:attr_name) { RedisBackedModel::RedisHash.new(Object.new, definition_attrs).attr_name }
     
-    it "is the same as the attribute key" do
-      attr_name.should eq(definition_attrs.keys.first)
+    it "is the attribute key converted to a symbol" do
+      attr_name.should eq(definition_attrs.keys.first.to_sym)
     end   
   end
 

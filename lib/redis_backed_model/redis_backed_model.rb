@@ -35,7 +35,6 @@ module RedisBackedModel
       
       if attributes.class == Hash
         attributes.each do |key, value|
-          # add_instance_variable(key, value)
           add_to_commands(Hash[key, value])
         end
       else
@@ -43,8 +42,7 @@ module RedisBackedModel
       end
       
       commands.select {|c| c.attr_able? }.each do |r|
-        self.instance_variable_set(r.to_instance_variable_name, r.to_instance_variable_value)
-        self.class.send(:attr_reader, r.to_instance_variable_name.to_s.deinstance_variableize)
+        add_attr_reader(r)
       end
       
     end
@@ -75,6 +73,11 @@ module RedisBackedModel
         "#{model_name_for_redis}:#{id}"
       end
 
+      def add_attr_reader(data_structure)
+        self.instance_variable_set(data_structure.to_instance_variable_name, data_structure.to_instance_variable_value)
+        self.class.class_eval { attr_reader data_structure.attr_name }
+      end
+
       def add_to_commands(attribute_pair)
         if (matched_data_structures = matching_data_structures(attribute_pair))
           matched_data_structures.each do |match|
@@ -82,20 +85,6 @@ module RedisBackedModel
           end
         end
       end
-
-      # def add_data_structure(data_structure)
-      #   self.instance_variable_set(data_structure.to_instance_variable_name, data_structure)
-      # end
-      #   
-      # def add_instance_variable(key, value)
-      #   if (matched_data_structures = matching_data_structure(key))
-      #     matched_data_structures.each do |match|
-      #       add_data_structure(match.new(self, Hash[key, value]))
-      #     end
-      #   else
-      #     self.instance_variable_set("@#{key}", value) 
-      #   end        
-      # end
 
       def matching_data_structures(attribute_pair)
         self.class.data_structures.select{ |data_type| data_type.matches?(attribute_pair) }

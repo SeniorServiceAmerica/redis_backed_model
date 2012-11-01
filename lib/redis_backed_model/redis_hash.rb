@@ -16,7 +16,7 @@ module RedisBackedModel
     end
 
     def attr_name
-      redis_hash_field
+      redis_hash_field.to_sym
     end
 
     def to_instance_variable_name
