@@ -56,7 +56,7 @@ module RedisBackedModel
     
     # Serializes the object as redis commands.
     def to_redis
-      data.map { |c| c.to_redis }
+      data.map { |d| d.to_redis }
     end
 
     def model_name_for_redis
