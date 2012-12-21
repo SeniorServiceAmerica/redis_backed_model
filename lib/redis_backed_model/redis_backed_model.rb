@@ -1,7 +1,13 @@
 module RedisBackedModel
   class RedisBackedModel
 
-    attr_reader :id
+    def self.redis_data_structures
+      [
+        RedisHash,
+        RedisSet,
+        SortedSet
+      ]
+    end
 
     # Checks to see if the redis store has the resource. Returns true if found, false if not 
     def self.exists?(id)
@@ -27,12 +33,18 @@ module RedisBackedModel
       self.name.demodulize.underscore
     end
 
+
+    attr_reader :id
+
     # Instantiates the object using the provided attributes.
-    # Object creates a data structure (hash, set, sorted set) for each attribute. 
-    # It then reflects on these structures to set instance variables.
+    #   Object creates a data structure (hash, set, sorted set) for each attribute. 
+    #   It then uses these structures to set instance variables.
     def initialize(attributes={})
       self.data = []
-      
+      add_attributes(attributes)
+    end
+    
+    def add_attributes(attributes)
       if attributes.class == Hash
         attributes.each do |key, value|
           add_data(Hash[key, value])
@@ -40,7 +52,6 @@ module RedisBackedModel
       else
         raise ArgumentError
       end
-      
     end
     
     # Serializes the object as redis commands.
@@ -56,14 +67,6 @@ module RedisBackedModel
     
       attr_accessor :data
     
-      def self.redis_data_structures
-        [
-          RedisHash,
-          RedisSet,
-          SortedSet
-        ]
-      end
-
       def self.instance_redis_hash_key(id)
         "#{model_name_for_redis}:#{id}"
       end

@@ -16,39 +16,93 @@ describe RedisBackedModel do
     @attributes_with_id['id'] = 1
   end
   
-  describe "on initialization" do 
-  
-    # it "has no instance variables unless specified" do 
-    #   rbm = InheritingFromRedisBackedModel.new
-    #   rbm.instance_variables.count.should eq(0)
-    # end
+  describe "#initialize" do 
 
-    it "creates an instance variable if given a hash with one member" do
-      attributes = {'id' => 1}
-      rbm = InheritingFromRedisBackedModel.new(attributes)
-      rbm.instance_variables.include?(:@id).should eq(true)
+    context "given no arguments" do
+      let(:rbm) {InheritingFromRedisBackedModel.new}
+
+      it "has a @data instance variable" do 
+        rbm.instance_variables.inspect.should eq('[:@data]')
+      end
+      
     end
-
-    it "creates instance variables for each member of an attribute hash" do      
-      rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
-      rbm.instance_variables.count.should eq(@attributes_with_id.size + 1), "iv: #{rbm.instance_variables.inspect} attr: #{@attributes_with_id.inspect}"
-      @attributes_with_id.each do | key, value|
-        rbm.instance_variables.include?(key.instance_variableize).should eq(true), "no instance variable for #{key}"      
+    
+    context "given a hash" do
+      let(:attributes) {
+          number_of_random_keys = rand(9) + 1
+          attributes = {'id' => 1 }
+          (1..number_of_random_keys).each do | i |
+            random_key = 'abcdefghijklmn'[i..(rand(i)+i)]
+            attributes[random_key] = i
+          end
+          attributes
+        }
+      it "checks all key-value pairs to see if they match any defined data structure" do
+        attributes.each_pair do |k,v|
+          RedisBackedModel::RedisBackedModel.redis_data_structures.each do |structure|
+            structure.should_receive(:matches?).with(Hash[k,v])
+          end
+        end
+        InheritingFromRedisBackedModel.new(attributes)
+      end
+      it "builds a new data structure if there is a match" do
+        attribute = {'foo' => 'bar'}
+        RedisBackedModel::RedisBackedModel.redis_data_structures.each do |structure|
+          structure.stub(:matches?).and_return(true)
+          structure.should_receive(:new).with(anything(), attribute) { OpenStruct.new(attr_able?: false) }
+        end
+        InheritingFromRedisBackedModel.new(attribute)
+      end
+      it "does not build a data structure if there is a no match" do
+        attribute = {'foo' => 'bar'}
+        RedisBackedModel::RedisBackedModel.redis_data_structures.each do |structure|
+          structure.stub(:matches?).and_return(false)
+          structure.should_not_receive(:new)
+        end
+        InheritingFromRedisBackedModel.new(attribute)
+      end
+      it "creates an instance variable if the data structure is attr_able" do
+        attribute = {'foo' => 'bar'}
+        matching = RedisBackedModel::RedisBackedModel.redis_data_structures.first
+        matching.stub(:matched?).and_return(true)
+        matching.stub(:new) { 
+                              OpenStruct.new(attr_able?: true, 
+                                              to_instance_variable_name: :@foo,
+                                              to_instance_variable_value: 'bar', 
+                                              to_attr_name: :foo) 
+                                }
+        RedisBackedModel::RedisBackedModel.redis_data_structures[1..-1].each { |structure| structure.stub(:matches?).and_return(false)}
+        rbm = InheritingFromRedisBackedModel.new(attribute)
+        rbm.instance_variables.count.should eq(2)
+      end
+      it "does not create an instance variable if the data structure is not attr_able" do
+        attribute = {'foo' => 'bar'}
+        matching = RedisBackedModel::RedisBackedModel.redis_data_structures.first
+        matching.stub(:matched?).and_return(true)
+        matching.stub(:new) { 
+                              OpenStruct.new(attr_able?: false, 
+                                              to_instance_variable_name: :@foo,
+                                              to_instance_variable_value: 'bar', 
+                                              to_attr_name: :foo) 
+                                }
+        RedisBackedModel::RedisBackedModel.redis_data_structures[1..-1].each { |structure| structure.stub(:matches?).and_return(false)}
+        rbm = InheritingFromRedisBackedModel.new(attribute)
+        rbm.instance_variables.count.should eq(1)
       end
     end
-
-    it "creates attr_readers for each member of an attribute hash" do    
-      rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
-      @attributes_with_id.each do | key, value|
-        rbm.respond_to?(key).should eq(true), "no method for #{key}"      
-      end
-    end
-
 
     context "given an attribute hash with symbols for keys" do
+      let(:symbol_attributes) {
+          number_of_random_keys = rand(9) + 1
+          symbol_attributes = {'id' => 1 }
+          (1..number_of_random_keys).each do | i |
+            random_key = 'abcdefghijklmn'[i..(rand(i)+i)].to_sym
+            symbol_attributes[random_key] = i
+          end
+          symbol_attributes
+        }
+      let(:rbm) { InheritingFromRedisBackedModel.new(symbol_attributes) }
       it "converts symbol attributes to strings" do
-        attributes = {:id => 1, :first_name => 'jane', :last_name => 'doe'}
-        rbm = InheritingFromRedisBackedModel.new(attributes)
         rbm.instance_variables.include?(:@id).should eq(true)
         rbm.instance_variable_get(:@id).should eq(1)
       end
@@ -58,34 +112,6 @@ describe RedisBackedModel do
     it "raises an argument error if something other than a hash is passed in" do 
       expect { InheritingFromRedisBackedModel.new('w') }.to raise_error(ArgumentError)
       expect { InheritingFromRedisBackedModel.new(['w', 1]) }.to raise_error(ArgumentError)
-    end
-
-    context "if the attribute hash contains a score_[|] key" do 
-      before(:each) do 
-        scores = {'score_[foo|bar]' => '[1|2]', 'score_[qux|quux]' => '[i,ii]', 'score_[wibble|wobble]' => '[a|b]'}
-        @attributes_with_id.merge!(scores)
-      end
-      
-      # changing behavior no longer stores sorted sets in instance variables
-      # it "creates an instance variable for each score_[baz|wubble] called sorted_set_for_baz_by_wubble" do 
-      #   rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
-      #   rbm.instance_variables.should include('sorted_set_for_foo_by_bar'.instance_variableize)
-      #   rbm.instance_variables.should include('sorted_set_for_qux_by_quux'.instance_variableize)
-      #   rbm.instance_variables.should include('sorted_set_for_wibble_by_wobble'.instance_variableize)
-      # end
-      # 
-      # it "saves a SortedSet as the value of the score instance variable" do
-      #   rbm = InheritingFromRedisBackedModel.new(@attributes_with_id)
-      #   rbm.instance_variable_get('sorted_set_for_foo_by_bar'.instance_variableize).class.should eq(RedisBackedModel::SortedSet)
-      # end
-
-      # sorted set no longer matches these so it gets ignored
-      # it "raises a name error for near matches with '[]'" do
-      #   ['score_[foobar]', 'score[foo|bar]', 'score_[foobar|]'].each_with_index do |s,i|
-      #     @attributes_with_id[s] = '[i|i+1]'
-      #     expect { rbm = InheritingFromRedisBackedModel.new(@attributes_with_id) }.to raise_error(NameError)
-      #   end
-      # end
     end
 
   end
