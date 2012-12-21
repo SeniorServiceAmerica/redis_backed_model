@@ -91,24 +91,6 @@ describe RedisBackedModel do
       end
     end
 
-    context "given an attribute hash with symbols for keys" do
-      let(:symbol_attributes) {
-          number_of_random_keys = rand(9) + 1
-          symbol_attributes = {'id' => 1 }
-          (1..number_of_random_keys).each do | i |
-            random_key = 'abcdefghijklmn'[i..(rand(i)+i)].to_sym
-            symbol_attributes[random_key] = i
-          end
-          symbol_attributes
-        }
-      let(:rbm) { InheritingFromRedisBackedModel.new(symbol_attributes) }
-      it "converts symbol attributes to strings" do
-        rbm.instance_variables.include?(:@id).should eq(true)
-        rbm.instance_variable_get(:@id).should eq(1)
-      end
-    end
-
-
     it "raises an argument error if something other than a hash is passed in" do 
       expect { InheritingFromRedisBackedModel.new('w') }.to raise_error(ArgumentError)
       expect { InheritingFromRedisBackedModel.new(['w', 1]) }.to raise_error(ArgumentError)
