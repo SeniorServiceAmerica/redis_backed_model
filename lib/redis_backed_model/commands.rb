@@ -22,7 +22,7 @@ module RedisBackedModel
     private
     
     # def id_set_command
-    #   "sadd|#{@obj.model_name_for_redis}_ids|#{@obj.id}"
+    #   "sadd|#{@obj.redis_name}_ids|#{@obj.id}"
     # end 
 
     # def build_command_for_variable(variable)
@@ -35,7 +35,7 @@ module RedisBackedModel
     # end
     # 
     # def instance_variable_to_redis(instance_variable,value)
-    #   "hset|#{@obj.model_name_for_redis}:#{@obj.id}|#{instance_variable.to_s.deinstance_variableize}|#{value}"
+    #   "hset|#{@obj.redis_name}:#{@obj.id}|#{instance_variable.to_s.deinstance_variableize}|#{value}"
     # end  
   end
 end

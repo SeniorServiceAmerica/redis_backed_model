@@ -49,7 +49,7 @@ module RedisBackedModel
 
       def key_model_name
         # model.to_s.underscore.pluralize
-        model.model_name_for_redis.pluralize
+        model.redis_name.pluralize
       end
 
       def key_for_value

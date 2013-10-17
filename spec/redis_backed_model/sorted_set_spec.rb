@@ -54,7 +54,7 @@ describe RedisBackedModel::SortedSet do
     let(:redis_backed_model) { double("redis_backed_model") }
     
     it "returns zadd|model_name_pluralized + '_for_' + foo + '_by_' + bar + ':' + foo_id|bar_score|model_id' as to_redis" do 
-      redis_backed_model.should_receive(:model_name_for_redis).and_return('my_model')
+      redis_backed_model.should_receive(:redis_name).and_return('my_model')
       redis_backed_model.should_receive(:id).and_return(1)      
       sorted_set = RedisBackedModel::SortedSet.new(redis_backed_model, {'score_[foo|bar]' => '[foo_id|bar_score]'})        
       sorted_set.to_redis.should eq('zadd|my_models_for_foo_by_bar:foo_id|bar_score|1')        
@@ -62,7 +62,7 @@ describe RedisBackedModel::SortedSet do
   
     context "given a 'score_[x,y]' where y == 'date'" do
       it "converts date part of value to miliseconds" do
-        redis_backed_model.should_receive(:model_name_for_redis).and_return('my_model')
+        redis_backed_model.should_receive(:redis_name).and_return('my_model')
         redis_backed_model.should_receive(:id).and_return(1)        
         sorted_set = RedisBackedModel::SortedSet.new(redis_backed_model, {'score_[foo|date]'=>'[foo_id|2012-03-04]'})
         date_in_milliseconds = Date.civil(2012,3,4).to_time.to_f
@@ -72,7 +72,7 @@ describe RedisBackedModel::SortedSet do
     
     context "given definition value containing a date where y in 'score_[x|y]' != 'date' " do
       it "leave does not convert the value" do
-        redis_backed_model.should_receive(:model_name_for_redis).and_return('my_model')
+        redis_backed_model.should_receive(:redis_name).and_return('my_model')
         redis_backed_model.should_receive(:id).and_return(1)
         sorted_set = RedisBackedModel::SortedSet.new(redis_backed_model, {'score_[foo|bar]'=>'[foo_id|2012-03-04]'})
         sorted_set.to_redis.should eq("zadd|my_models_for_foo_by_bar:foo_id|2012-03-04|1")          

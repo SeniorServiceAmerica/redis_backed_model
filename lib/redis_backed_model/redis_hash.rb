@@ -40,7 +40,7 @@ module RedisBackedModel
       end
       
       def redis_hash_key
-        "#{model.model_name_for_redis}:#{model.id}"
+        "#{model.redis_name}:#{model.id}"
       end
 
       def redis_hash_value

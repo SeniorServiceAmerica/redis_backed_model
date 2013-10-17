@@ -126,7 +126,7 @@ describe RedisBackedModel do
       it "has hset commands with format 'hset|model_name:id|variable_name|variable|value'" do
         # pending("revisit once redis data structures in place")        
         @attributes.each do |variable_name,value|
-          @hset_commands.should include("hset|#{@obj.model_name_for_redis}:#{@obj.id}|#{variable_name}|#{value}") 
+          @hset_commands.should include("hset|#{@obj.redis_name}:#{@obj.id}|#{variable_name}|#{value}") 
         end
       end
       

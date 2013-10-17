@@ -28,7 +28,7 @@ module RedisBackedModel
       attr_accessor :model, :definition
 
       def key
-        "#{model.model_name_for_redis}_#{key_name}"
+        "#{model.redis_name}_#{key_name}"
       end
       
       def key_name

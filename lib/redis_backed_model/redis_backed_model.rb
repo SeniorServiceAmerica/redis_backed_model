@@ -29,7 +29,7 @@ module RedisBackedModel
       (found.count == 1) ? found.first : found
     end
 
-    def self.model_name_for_redis
+    def self.redis_name
       self.name.demodulize.underscore
     end
 
@@ -59,8 +59,8 @@ module RedisBackedModel
       data.map { |d| d.to_redis }
     end
 
-    def model_name_for_redis
-      self.class.model_name_for_redis
+    def redis_name
+      self.class.redis_name
     end
     
     private
@@ -68,7 +68,7 @@ module RedisBackedModel
       attr_accessor :data
     
       def self.instance_redis_hash_key(id)
-        "#{model_name_for_redis}:#{id}"
+        "#{redis_name}:#{id}"
       end
 
       def add_attr_reader(data_structure)

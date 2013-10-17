@@ -76,31 +76,31 @@ describe RedisBackedModel::RedisHash do
     let(:redis_hash) { RedisBackedModel::RedisHash.new(model, definition_attrs) }
     
     it "has 4 parts seperated by '|'" do
-      model.should_receive(:model_name_for_redis).and_return(redis_name)
+      model.should_receive(:redis_name).and_return(redis_name)
       model.should_receive(:id).and_return(id)
       redis_hash.to_redis.split('|').count.should eq(4)
     end
     
     it "begins with hset" do
-      model.should_receive(:model_name_for_redis).and_return(redis_name)
+      model.should_receive(:redis_name).and_return(redis_name)
       model.should_receive(:id).and_return(id)
       redis_hash.to_redis.split('|')[0].should eq('hset')
     end
     
-    it "has model_name_for_redis:model_id as hset key" do
-      model.should_receive(:model_name_for_redis).and_return(redis_name)
+    it "has redis_name:model_id as hset key" do
+      model.should_receive(:redis_name).and_return(redis_name)
       model.should_receive(:id).and_return(id)
       redis_hash.to_redis.split('|')[1].should eq("#{redis_name}:#{id}")
     end
     
     it "has attribute key as hset field" do
-      model.should_receive(:model_name_for_redis).and_return(redis_name)
+      model.should_receive(:redis_name).and_return(redis_name)
       model.should_receive(:id).and_return(id)
       redis_hash.to_redis.split('|')[2].should eq("#{definition_attrs.keys.first}")
     end
     
     it "has attribute value as hset value" do
-      model.should_receive(:model_name_for_redis).and_return(redis_name)
+      model.should_receive(:redis_name).and_return(redis_name)
       model.should_receive(:id).and_return(id)
       redis_hash.to_redis.split('|')[3].should eq("#{definition_attrs.values.first}")
     end
@@ -112,7 +112,7 @@ describe RedisBackedModel::RedisHash do
       let(:id) { 1 }
       let(:redis_hash) { RedisBackedModel::RedisHash.new(model, definition_attrs) }      
       it "converts symbol to a string for hset field" do
-        model.should_receive(:model_name_for_redis).and_return(redis_name)
+        model.should_receive(:redis_name).and_return(redis_name)
         model.should_receive(:id).and_return(id)
         # redis_hash.to_redis.split('|')[2].should eq("#{definition_attrs.keys.first.to_s}")
         redis_hash.to_redis.split('|')[2].should eq("some_key")        
