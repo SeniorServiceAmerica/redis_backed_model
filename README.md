@@ -16,6 +16,10 @@ Or install it yourself as:
 
     $ gem install redis_backed_model
 
+## Testing
+
+You need a Redis server running. Follow the [redis instructions](http://redis.io/download) for installation and then start the server with `redis-server`. Then test with `bundle exec rake`.
+
 ## Usage
 
 Subclass your models from RedisBackedModel::RedisBackedModel
